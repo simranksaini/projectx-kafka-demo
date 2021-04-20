@@ -1,0 +1,19 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: inventory-service
+spring.cloud.stream:
+  function:
+    definition: inventoryProcessor
+  bindings:
+    inventoryProcessor-in-0:
+      destination: order-event
+    inventoryProcessor-out-0:
+      destination: inventory-event
+eureka:
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    service-url:
+      defaultZone: http://localhost:8721/eureka/

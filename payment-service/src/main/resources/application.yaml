@@ -1,0 +1,27 @@
+server:
+  port: 8082
+spring:
+  application:
+    name: payment-service
+spring.cloud.stream:
+  function:
+    definition: paymentProcessor
+  bindings:
+    paymentProcessor-in-0:
+      destination: order-event
+    paymentProcessor-out-0:
+      destination: payment-event
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8721/eureka/
+  instance:
+    hostname: localhost
+#eureka:
+#  client:
+#    registerWithEureka: true
+#    fetchRegistry: true
+#    service-url:
+#      defaultZone: http://localhost:8721/eureka/
