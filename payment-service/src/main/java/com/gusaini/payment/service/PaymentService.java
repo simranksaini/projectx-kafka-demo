@@ -7,6 +7,7 @@ import com.gusaini.dto.PaymentDto;
 import com.gusaini.events.order.OrderEvent;
 import com.gusaini.events.payment.PaymentEvent;
 import com.gusaini.events.payment.PaymentStatus;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +22,12 @@ public class PaymentService {
     private UserTransactionRepository transactionRepository;
 
     @Transactional
+    @HystrixCommand(fallbackMethod = "getDataFallBack")
     public PaymentEvent newOrderEvent(OrderEvent orderEvent){
         var purchaseOrder = orderEvent.getPurchaseOrder();
         var dto = PaymentDto.of(purchaseOrder.getOrderId(), purchaseOrder.getUserId(), purchaseOrder.getPrice());
+        if(purchaseOrder.getUserId().equals(4))
+            throw new RuntimeException();
         return this.balanceRepository.findById(purchaseOrder.getUserId())
                 .filter(ub -> ub.getBalance() >= purchaseOrder.getPrice())
                 .map(ub -> {
@@ -32,6 +36,12 @@ public class PaymentService {
                     return new PaymentEvent(dto, PaymentStatus.RESERVED);
                 })
                 .orElse(new PaymentEvent(dto, PaymentStatus.REJECTED));
+    }
+
+    public PaymentEvent getDataFallBack(OrderEvent orderEvent){
+        var purchaseOrder = orderEvent.getPurchaseOrder();
+        var dto = PaymentDto.of(purchaseOrder.getOrderId(), purchaseOrder.getUserId(), purchaseOrder.getPrice());
+        return new PaymentEvent(dto, PaymentStatus.REJECTED);
     }
 
     @Transactional
