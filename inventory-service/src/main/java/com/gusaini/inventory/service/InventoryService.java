@@ -1,5 +1,6 @@
 package com.gusaini.inventory.service;
 
+import com.gusaini.inventory.entity.OrderInventory;
 import com.gusaini.inventory.repository.OrderInventoryConsumptionRepository;
 import com.gusaini.inventory.repository.OrderInventoryRepository;
 import com.gusaini.dto.InventoryDto;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -35,6 +38,17 @@ public class InventoryService {
         this.productInventoryMap.put(3, 5);
         this.productInventoryMap.put(4, 5);
         this.productInventoryMap.put(5, 5);
+    }
+
+    public List<OrderInventory> getAll(){
+        List<OrderInventory> orderInventoryList = new ArrayList<>();
+        productInventoryMap.forEach((k,v) -> {
+            OrderInventory orderInventory = new OrderInventory();
+            orderInventory.setProductId(k);
+            orderInventory.setAvailableInventory(v);
+            orderInventoryList.add(orderInventory);
+        });
+        return orderInventoryList;
     }
 
     @HystrixCommand(fallbackMethod = "getDataFallBack")

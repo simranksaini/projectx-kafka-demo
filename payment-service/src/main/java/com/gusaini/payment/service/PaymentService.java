@@ -1,5 +1,7 @@
 package com.gusaini.payment.service;
 
+import com.gusaini.dto.AddBalanceDto;
+import com.gusaini.payment.entity.UserBalance;
 import com.gusaini.payment.entity.UserTransaction;
 import com.gusaini.payment.repository.UserBalanceRepository;
 import com.gusaini.payment.repository.UserTransactionRepository;
@@ -13,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -25,6 +29,10 @@ public class PaymentService {
     @Autowired
     private UserTransactionRepository transactionRepository;
 
+    public Map<Integer, Double> getUserBalanceMap() {
+        return userBalanceMap;
+    }
+
     private Map<Integer, Double> userBalanceMap;
 
     @PostConstruct
@@ -35,6 +43,51 @@ public class PaymentService {
         this.userBalanceMap.put(3, 1000d);
         this.userBalanceMap.put(4, 1000d);
         this.userBalanceMap.put(5, 1000d);
+    }
+
+    public UserBalance addBalance(AddBalanceDto addBalanceDto) {
+        double balance = this.userBalanceMap.getOrDefault(addBalanceDto.getUserId(), 0d);
+        balance+= addBalanceDto.getAmount();
+        this.userBalanceMap.put(addBalanceDto.getUserId(), balance);
+        UserBalance userBalance = new UserBalance(addBalanceDto.getUserId(), (int) balance);
+        return userBalance;
+    }
+
+    public UserBalance removeBalance(AddBalanceDto addBalanceDto) {
+        double balance = this.userBalanceMap.getOrDefault(addBalanceDto.getUserId(), 0d);
+        if(balance-addBalanceDto.getAmount() > 0){
+            balance-=addBalanceDto.getAmount();
+            this.userBalanceMap.put(addBalanceDto.getUserId(), balance);
+            UserBalance userBalance = new UserBalance(addBalanceDto.getUserId(), (int) balance);
+            return userBalance;
+        }
+        UserBalance userBalance = new UserBalance(addBalanceDto.getUserId(), (int) balance);
+        return userBalance;
+    }
+
+    @HystrixCommand(fallbackMethod = "getBalanceFallBack")
+    public UserBalance getBalance(Integer userId) {
+        if(this.userBalanceMap.containsKey(userId)){
+            double balance = this.userBalanceMap.get(userId);
+            UserBalance userBalance = new UserBalance(userId, (int) balance);
+            return userBalance;
+        } else{
+            throw new RuntimeException();
+        }
+    }
+
+    public UserBalance getBalanceFallBack(Integer userId){
+        UserBalance userBalance = new UserBalance(0, 0);
+        return userBalance;
+    }
+
+    public List<UserBalance> getAll() {
+        List<UserBalance> userBalanceList = new ArrayList<>();
+        userBalanceMap.forEach((k,v) -> {
+            UserBalance userBalance = new UserBalance(k, v.intValue());
+            userBalanceList.add(userBalance);
+        });
+        return userBalanceList;
     }
 
     @HystrixCommand(fallbackMethod = "getDataFallBack")
