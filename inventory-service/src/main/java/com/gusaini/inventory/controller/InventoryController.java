@@ -16,8 +16,12 @@ public class InventoryController {
     @Autowired
     private InventoryService inventoryService;
 
+    @Value("${config.server.inventory}")
+    private String inventory;
+
     @GetMapping("/all")
     public List<OrderInventory> getAll(){
         return this.inventoryService.getAll();
+        System.out.println(inventory);
     }
 }
