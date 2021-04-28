@@ -5,6 +5,7 @@ import com.gusaini.dto.OrderRequestDto;
 import com.gusaini.order.service.OrderCommandService;
 import com.gusaini.order.service.OrderQueryService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,10 +21,14 @@ public class OrderController {
     @Autowired
     private OrderQueryService queryService;
 
+    @Value("${config.server.order}")
+    private String order;
+
     @PostMapping("/create")
     public PurchaseOrder createOrder(@RequestBody OrderRequestDto requestDTO){
         requestDTO.setOrderId(UUID.randomUUID());
         return this.commandService.createOrder(requestDTO);
+        System.out.print(order);
     }
 
     @GetMapping("/all")
